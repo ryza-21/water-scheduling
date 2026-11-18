@@ -1,3 +1,4 @@
+
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -6,11 +7,6 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CommunityUserController;
-/*
-|--------------------------------------------------------------------------
-| Public Routes
-|--------------------------------------------------------------------------
-*/
 
 Route::get('/', function () {
     if (Auth::check()) {
@@ -27,6 +23,7 @@ Route::get('/', function () {
 
     return redirect()->route('login');
 });
+
 Route::middleware('guest')->group(function () {
 
     Route::get('/login', [LoginController::class, 'showLoginForm'])
@@ -44,23 +41,10 @@ Route::middleware('guest')->group(function () {
         ->name('register.submit');
 });
 
-/*
-|--------------------------------------------------------------------------
-| Authenticated Routes
-|--------------------------------------------------------------------------
-*/
-
 Route::middleware('auth')->group(function () {
 
     Route::post('/logout', [LoginController::class, 'logout'])
         ->name('logout');
-
-    /*
-    |--------------------------------------------------------------------------
-    | Administrator Routes
-    |--------------------------------------------------------------------------
-    | Only users with the admin role can access these routes.
-    */
 
     Route::middleware('role:admin')
         ->prefix('admin')
@@ -70,7 +54,6 @@ Route::middleware('auth')->group(function () {
             Route::get('/dashboard', [AdminController::class, 'dashboard'])
                 ->name('dashboard');
 
-            // Water Sources
             Route::get('/water-sources', [AdminController::class, 'waterSources'])
                 ->name('water-sources');
 
@@ -85,7 +68,6 @@ Route::middleware('auth')->group(function () {
                 ->whereNumber('waterSource')
                 ->name('water-sources.destroy');
 
-            // Access Requests
             Route::get('/access-requests', [AdminController::class, 'accessRequests'])
                 ->name('access-requests');
 
@@ -96,7 +78,6 @@ Route::middleware('auth')->group(function () {
             Route::get('/request-approvals', [AdminController::class, 'requestApprovals'])
                 ->name('request-approvals');
 
-            // Schedule Management
             Route::get('/schedule-management', [AdminController::class, 'scheduleManagement'])
                 ->name('schedule-management');
 
@@ -108,11 +89,9 @@ Route::middleware('auth')->group(function () {
                 ->whereNumber('accessRequest')
                 ->name('schedule.destroy');
 
-            // Access Records
             Route::get('/access-records', [AdminController::class, 'accessRecords'])
                 ->name('access-records');
 
-            // User Management
             Route::get('/user-management', [AdminController::class, 'userManagement'])
                 ->name('user-management');
 
@@ -124,7 +103,6 @@ Route::middleware('auth')->group(function () {
                 ->whereNumber('managedUser')
                 ->name('user-management.update');
 
-            // Reports
             Route::get('/reports', [AdminController::class, 'reports'])
                 ->name('reports');
 
@@ -134,13 +112,6 @@ Route::middleware('auth')->group(function () {
             Route::get('/reports/export/excel', [AdminController::class, 'exportReportsExcel'])
                 ->name('reports.excel');
         });
-
-    /*
-    |--------------------------------------------------------------------------
-    | Community User Routes
-    |--------------------------------------------------------------------------
-    | Only users with the community_user role can access these routes.
-    */
 
     Route::middleware('role:community_user')
         ->prefix('user')

@@ -21,7 +21,8 @@ return new class extends Migration
                 ->constrained('water_sources')
                 ->restrictOnDelete();
 
-            $table->unique('request_code');
+            // request_code is already unique
+            // in the original create migration.
         });
     }
 
@@ -31,8 +32,6 @@ return new class extends Migration
 
             $table->dropForeign(['user_id']);
             $table->dropForeign(['water_source_id']);
-
-            $table->dropUnique(['request_code']);
 
             $table->dropColumn([
                 'user_id',

@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -11,9 +10,6 @@ use Illuminate\Support\Str;
 
 class CommunityUserController extends Controller
 {
-    /**
-     * Community User Dashboard
-     */
     public function dashboard()
     {
         $user = Auth::user();
@@ -56,35 +52,47 @@ class CommunityUserController extends Controller
         ]);
     }
 
-    /**
-     * Create Access Request Form
-     */
-    public function createRequest()
+    // REQUEST WATER ACCESS PAGE
+    public function createRequest(Request $request)
     {
         $waterSources = WaterSource::query()
-            ->select(['id', 'name'])
-            ->orderBy('name')
+            ->select([
+                'id',
+                'source_name',
+                'location'
+            ])
+            ->where('status', 'Active')
+            ->orderBy('source_name')
             ->get();
 
-        return view('user.request-access', compact('waterSources'));
+        // Automatically select source when coming from Water Sources page
+        $selectedSourceId = $request->query('source');
+
+        return view('user.request-access', compact(
+            'waterSources',
+            'selectedSourceId'
+        ));
     }
 
-    /**
-     * Display Water Sources
-     */
+    // WATER SOURCES PAGE
     public function waterSources()
     {
         $waterSources = WaterSource::query()
-            ->select(['id', 'name'])
-            ->orderBy('name')
+            ->select([
+                'id',
+                'source_id',
+                'source_name',
+                'location',
+                'capacity',
+                'status'
+            ])
+            ->orderBy('source_name')
             ->get();
 
         return view('user.water-sources', compact('waterSources'));
     }
 
-    /**
-     * Store Water Access Request
-     */
+    // SAVE WATER ACCESS REQUEST
     public function storeWaterAccess(Request $request)
     {
         $validated = $request->validate([
@@ -122,6 +130,10 @@ class CommunityUserController extends Controller
                 $validated['water_source_id']
             );
 
+            if ($waterSource->status !== 'Active') {
+                abort(403, 'This water source is currently unavailable.');
+            }
+
             AccessRequest::create([
                 'request_code' => 'REQ-' . strtoupper(
                     (string) Str::uuid()
@@ -132,14 +144,13 @@ class CommunityUserController extends Controller
                 'user_email' => $user->email,
 
                 'water_source_id' => $waterSource->id,
-                'requested_source' => $waterSource->name,
+                'requested_source' => $waterSource->source_name,
 
                 'preferred_date' => $validated['preferred_date'],
                 'purpose' => $validated['purpose'],
 
                 'estimated_volume' => $validated['estimated_volume'] ?? null,
 
-                // Never accept status from the user.
                 'status' => 'Pending',
 
                 'submitted_at' => now(),
@@ -151,9 +162,7 @@ class CommunityUserController extends Controller
             ->with('success', 'Your water access request has been submitted successfully.');
     }
 
-    /**
-     * Display Own Requests Only
-     */
+    // MY REQUESTS
     public function myRequests()
     {
         $requests = AccessRequest::where('user_id', Auth::id())
@@ -163,9 +172,7 @@ class CommunityUserController extends Controller
         return view('user.my-requests', compact('requests'));
     }
 
-    /**
-     * Display Own Schedules Only
-     */
+    // MY SCHEDULE
     public function mySchedule()
     {
         $requests = AccessRequest::where('user_id', Auth::id())
@@ -176,9 +183,7 @@ class CommunityUserController extends Controller
         return view('user.my-schedule', compact('requests'));
     }
 
-    /**
-     * Display Own Access History Only
-     */
+    // ACCESS HISTORY
     public function accessHistory()
     {
         $requests = AccessRequest::where('user_id', Auth::id())
